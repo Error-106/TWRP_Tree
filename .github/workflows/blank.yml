@@ -53,8 +53,12 @@ jobs:
 
     - name: Build Magisk
       working-directory: Magisk
+      env:
+        ANDROID_NDK_HOME: ${{ runner.temp }}/android-ndk/android-ndk-r27
       run: |
         echo "Building Magisk..."
+        export ANDROID_NDK_HOME="$HOME/android-ndk/android-ndk-r27"
+        python3 build.py ndk
         python3 build.py native
         echo "Build completed. Checking output directory:"
         ls -la native/out/
