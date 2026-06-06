@@ -26,7 +26,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y git wget unzip python3 python3-pip cpio
-        pip3 install requests
+        pip3 install twrpdtgen
 
     - name: Clone twrpdtgen
       run: |
@@ -37,7 +37,7 @@ jobs:
     - name: Extract device tree using twrpdtgen
       run: |
         echo "Extracting device tree from initboot.img using twrpdtgen..."
-        python3 twrpdtgen/twrpdtgen.py initboot.img -o device_tree
+        python3 -m twrpdtgen initboot.img -o device_tree
         echo "Device tree extraction completed"
         ls -la device_tree/
         
@@ -51,7 +51,7 @@ jobs:
           echo "ERROR: Device tree extraction failed"
           exit 1
         fi
-
+        
     - name: Generate build report
       run: |
         echo "## Build Report" >> $GITHUB_STEP_SUMMARY
