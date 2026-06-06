@@ -6,7 +6,10 @@ on:
       IMGURL:
         description: 'URL of initboot.img (Android 15 REQUIRED)'
         required: true
-
+        
+permissions:
+  contents: write
+  
 jobs:
   build:
     runs-on: ubuntu-latest
