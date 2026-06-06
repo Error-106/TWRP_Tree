@@ -34,10 +34,13 @@ jobs:
         cd Magisk
         git submodule update --init --recursive
 
-    - name: Install NDK
-      working-directory: Magisk
+    - name: Install Android NDK
       run: |
-        python3 build.py ndk
+        mkdir -p $HOME/android-ndk
+        cd $HOME/android-ndk
+        wget -q https://dl.google.com/android/repository/android-ndk-r27-linux.zip
+        unzip -q android-ndk-r27-linux.zip
+        echo "ANDROID_NDK_HOME=$HOME/android-ndk/android-ndk-r27" >> $GITHUB_ENV
         echo "NDK installation directory:"
         ls -la
         if [ -d "ndk" ]; then
