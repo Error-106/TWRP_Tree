@@ -43,19 +43,12 @@ jobs:
         echo "ANDROID_NDK_HOME=$HOME/android-ndk/android-ndk-r27" >> $GITHUB_ENV
         echo "NDK installation directory:"
         ls -la
-        if [ -d "ndk" ]; then
-          echo "NDK found in Magisk/ndk"
-          echo "ANDROID_NDK_HOME=$PWD/ndk" >> $GITHUB_ENV
+        # Verify NDK was installed correctly
+        if [ -d "$HOME/android-ndk/android-ndk-r27" ]; then
+          echo "NDK installed successfully at $HOME/android-ndk/android-ndk-r27"
         else
-          echo "NDK directory not found in Magisk"
-          # 尝试在父目录查找
-          if [ -d "../ndk" ]; then
-            echo "NDK found in parent directory"
-            echo "ANDROID_NDK_HOME=$PWD/../ndk" >> $GITHUB_ENV
-          else
-            echo "NDK directory not found anywhere"
-            exit 1
-          fi
+          echo "ERROR: NDK installation failed"
+          exit 1
         fi
 
     - name: Build Magisk
