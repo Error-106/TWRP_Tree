@@ -1,0 +1,90 @@
+name: Make TWRP Device (Android 15 Optimized)
+
+on:
+  workflow_dispatch:
+    inputs:
+      IMGURL:
+        description: 'URL of initboot.img (Android 15 REQUIRED)'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download initboot.img
+      run: |
+        curl -L -o initboot.img "${{ github.event.inputs.IMGURL }}"
+        echo "Downloaded initboot.img:"
+        file initboot.img
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git wget unzip python3 python3-pip cpio
+        pip3 install requests
+
+    - name: Clone twrpdtgen
+      run: |
+        git clone https://github.com/twrpdtgen/twrpdtgen.git
+        cd twrpdtgen
+        pip3 install -r requirements.txt
+
+    - name: Extract device tree using twrpdtgen
+      run: |
+        echo "Extracting device tree from initboot.img using twrpdtgen..."
+        python3 twrpdtgen/twrpdtgen.py initboot.img -o device_tree
+        echo "Device tree extraction completed"
+        ls -la device_tree/
+        
+        # Copy device tree files to workspace
+        if [ -d "device_tree" ]; then
+          echo "Device tree extracted successfully"
+          # Package device tree
+          tar -czf device_tree.tar.gz device_tree/
+          echo "Device tree packaged as device_tree.tar.gz"
+        else
+          echo "ERROR: Device tree extraction failed"
+          exit 1
+        fi
+
+    - name: Generate build report
+      run: |
+        echo "## Build Report" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Status**: Success" >> $GITHUB_STEP_SUMMARY
+        echo "- **Device Tree**: device_tree/" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Date**: $(date "+%Y-%m-%d %H:%M:%S")" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tool**: twrpdtgen" >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: twrp-device-tree
+        path: |
+          device_tree.tar.gz
+          device_tree/
+        retention-days: 30
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          device_tree.tar.gz
+        tag_name: device-tree-${{ github.run_number }}
+        body: |
+          # TWRP Device Tree Build
+          
+          - **Build Number**: ${{ github.run_number }}
+          - **Build Date**: ${{ github.event.head_commit.timestamp }}
+          - **Tool**: twrpdtgen
+          - **Image URL**: ${{ github.event.inputs.IMGURL }}
+          
+          Device tree extracted from initboot.img using twrpdtgen.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
